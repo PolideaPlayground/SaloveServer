@@ -43,6 +43,8 @@ dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib-jre8:${kotlinVersion}")
     compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
 
+    compile('com.google.api-client:google-api-client:1.22.0')
+    compile('com.google.oauth-client:google-oauth-client-jetty:1.22.0')
     compile('com.google.apis:google-api-services-calendar:v3-rev254-1.22.0')
 
     runtime('org.springframework.boot:spring-boot-devtools')
