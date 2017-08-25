@@ -14,20 +14,24 @@ class Reservation(val calendar: Calendar) {
 
     val CALENDAR_ID: String = "primary"
 
-    fun create(roomId: Int) {
+    fun create(roomId: Int): EventResponse {
         val event = Event()
         event.summary = "Room $roomId ad-hoc reservation!"
         event.description = roomId.toString()
 
         val now: Date = Date()
+        val nextFullHour = getNextFullHour(now)
+
         setStartDate(event, now)
-        setEndTime(event, now)
+        setEndTime(event, nextFullHour)
         calendar.events().insert(CALENDAR_ID, event).execute()
+
+        return EventResponse(now.time, nextFullHour.time, event.summary, roomId)
     }
 
-    private fun setEndTime(event: Event, now: Date) {
+    private fun setEndTime(event: Event, endTime: Date) {
         event.end = EventDateTime()
-        event.end.dateTime = DateTime(getNextFullHour(now))
+        event.end.dateTime = DateTime(endTime)
         event.end.timeZone = "Europe/Warsaw"
     }
 
@@ -47,7 +51,7 @@ class Reservation(val calendar: Calendar) {
     }
 
 
-    data class EventResponse(val start: Long, val end: Long, val summary: String, val roomId: Long?)
+    data class EventResponse(val start: Long, val end: Long, val summary: String, val roomId: Int?)
 
     fun getTodaysEvents(): List<EventResponse> {
         val now = Date()
@@ -56,7 +60,7 @@ class Reservation(val calendar: Calendar) {
                 .setOrderBy("startTime").setSingleEvents(true).execute()
 
         return events.items.map {
-            EventResponse(it.start.dateTime.value, it.end.dateTime.value, it.summary, it.description.toLongOrNull())
+            EventResponse(it.start.dateTime.value, it.end.dateTime.value, it.summary, it.description.toIntOrNull())
         }
     }
 
