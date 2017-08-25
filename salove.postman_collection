@@ -1,0 +1,31 @@
+{
+	"variables": [],
+	"info": {
+		"name": "salove",
+		"_postman_id": "26ec663a-e33e-e22d-58ee-867c406b5c3d",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "https://3f37e101.ngrok.io/rooms/reservations",
+			"request": {
+				"url": "https://3f37e101.ngrok.io/rooms/reservations",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"id\" : 1,\n\t\"start\" : 1503672351000,\n\t\"end\" : 1503678351000\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
