@@ -4,6 +4,7 @@ import com.google.api.client.util.DateTime
 import com.google.api.services.calendar.Calendar
 import com.google.api.services.calendar.model.Event
 import com.google.api.services.calendar.model.EventDateTime
+import com.google.api.services.calendar.model.Events
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -15,14 +16,13 @@ class Reservation(val calendar: Calendar) {
 
     fun create(roomId: Int) {
         val event = Event()
-        event.summary = "Room $roomId reservation!"
+        event.summary = "Room $roomId ad-hoc reservation!"
+        event.description = roomId.toString()
 
         val now: Date = Date()
         setStartDate(event, now)
         setEndTime(event, now)
         calendar.events().insert(CALENDAR_ID, event).execute()
-
-        read()
     }
 
     private fun setEndTime(event: Event, now: Date) {
@@ -37,33 +37,35 @@ class Reservation(val calendar: Calendar) {
         event.start.timeZone = "Europe/Warsaw"
     }
 
-    private fun getNextFullHour(now: Date): Date? {
+    private fun getNextFullHour(now: Date): Date {
         val cal = java.util.Calendar.getInstance()
         cal.time = now
-        cal.add(java.util.Calendar.HOUR_OF_DAY, 1) // adds one hour
+        cal.add(java.util.Calendar.HOUR_OF_DAY, 1)
         cal.set(java.util.Calendar.MINUTE, 0)
         cal.set(java.util.Calendar.SECOND, 0)
-        val nextFullHour = cal.getTime()
-        return nextFullHour
+        return cal.time
     }
 
-    fun read() {
-        val now = DateTime(System.currentTimeMillis())
 
-        val events = calendar.events().list(CALENDAR_ID).setMaxResults(10).setTimeMin(now)
+    data class EventResponse(val start: Long, val end: Long, val summary: String, val roomId: Long?)
+
+    fun getTodaysEvents(): List<EventResponse> {
+        val now = Date()
+
+        val events: Events = calendar.events().list(CALENDAR_ID).setTimeMin(DateTime(now)).setTimeMax(DateTime(getTodaysMaxHour(now)))
                 .setOrderBy("startTime").setSingleEvents(true).execute()
-        val items = events.getItems()
-        if (items.size == 0) {
-            println("No upcoming events found.")
-        } else {
-            println("Upcoming events")
-            for (event in items) {
-                var start: DateTime? = event.getStart().getDateTime()
-                if (start == null) {
-                    start = event.getStart().getDate()
-                }
-                System.out.printf("%s (%s)\n", event.getSummary(), start)
-            }
+
+        return events.items.map {
+            EventResponse(it.start.dateTime.value, it.end.dateTime.value, it.summary, it.description.toLongOrNull())
         }
+    }
+
+    private fun getTodaysMaxHour(now: Date): Date {
+        val cal = java.util.Calendar.getInstance()
+        cal.time = now
+        cal.add(java.util.Calendar.HOUR_OF_DAY, 23)
+        cal.set(java.util.Calendar.MINUTE, 59)
+        cal.set(java.util.Calendar.SECOND, 59)
+        return cal.time
     }
 }
